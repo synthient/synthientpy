@@ -4,169 +4,137 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 
-class TokenType(str, Enum):
-    """The three types of tokens that can be issued.
-    METRICS - Metrics token, used for gathering data.
-    SIGN - Sign token, used for verifying the challenge.
-    STRICT - Strict token, used for strict verification.
+class FeedFormat(str, Enum):
+    """Format options for data feed exports.
+    JSONL - JSON Lines format.
+    CSV - Comma-separated values.
+    TEXT - Plain text, one IP per line with provider annotation.
     """
 
-    METRICS = "metrics"
-    SIGN = "sign"
-    STRICT = "strict"
+    JSONL = "JSONL"
+    CSV = "CSV"
+    TEXT = "TEXT"
 
 
-class ActionType(str, Enum):
-    """Translates the risk level into an action to take.
-    ALLOW - Allow the visitor to continue.
-    REDIRECT - Redirect the visitor to a different page. Or have them perform another form of verification.
-    BLOCK - Block the visitor from accessing
+class SortOrder(str, Enum):
+    """Sort order for feed results.
+    ASC - Ascending order.
+    DESC - Descending order.
     """
 
-    ALLOW = 0
-    REDIRECT = 1
-    BLOCK = 2
+    ASC = "asc"
+    DESC = "desc"
 
 
-class RiskLevel(str, Enum):
-    """Risk level of the visitor. Simplified for ease of use.
-    Under certain circumstances, you may want to use the risk score.
+class Network(BaseModel):
+    """Network information for an IP address.
+
+    asn (int): Autonomous System Number.
+    org (Optional[str]): Organization owning the ASN.
+    isp (str): Internet Service Provider.
+    type (str): Type of network (e.g., RESIDENTIAL, BUSINESS).
+    abuse_email (Optional[str]): Abuse contact email.
+    abuse_phone (Optional[str]): Abuse contact phone number.
+    domain (Optional[str]): Domain associated with the network.
     """
 
-    LOW = 0
-    MEDIUM = 1
-    HIGH = 2
+    asn: int
+    org: Optional[str] = None
+    isp: str
+    type: str
+    abuse_email: Optional[str] = None
+    abuse_phone: Optional[str] = None
+    domain: Optional[str] = None
 
 
-class BaseResponse(BaseModel):
+class Location(BaseModel):
+    """Geographical location details of an IP address.
+
+    geo_hash (Optional[str]): Geohash representing the location.
+    country (str): Two-letter country code (ISO 3166-1 alpha-2).
+    state (Optional[str]): State or region within the country.
+    city (str): City of the location.
+    timezone (str): Timezone of the location (e.g., Africa/Lagos).
+    longitude (float): Longitude coordinate.
+    latitude (float): Latitude coordinate.
     """
-    For representing 401, 409
-    success: bool = False
-    """
 
-    message: str
+    geo_hash: Optional[str] = None
+    country: str
+    state: Optional[str] = None
+    city: str
+    timezone: str
+    longitude: float
+    latitude: float
 
 
 class Device(BaseModel):
-    """Device model, contains core information relating
-    to the visitor device.
+    """Device associated with an IP address.
 
-    model (Optional[str]): The model of the device, if available.
-    brand (str): The brand of the device.
-    os (str): The operating system of the device.
-    version (str): The version of the operating system.
+    os (str): Operating system of the device.
+    version (str): OS version.
     """
 
-    model: Optional[str] = None
-    brand: Optional[str] = None
     os: str
     version: str
 
 
-class Browser(BaseModel):
-    """Browser being used, can be null if the browser could not be
-    identified. (next to impossible)
+class EnrichedEntry(BaseModel):
+    """Enriched data from a third-party provider.
 
-    name (str): The name of the browser.
-    version (str): The version of the browser.
+    provider (str): Name of the enrichment provider.
+    type (str): Type of service identified by the provider.
+    last_seen (str): Date when the provider last saw this IP as this type.
     """
 
-    name: str
-    version: str
+    provider: str
+    type: str
+    last_seen: str
 
 
-class IpData(BaseModel):
-    """IpData model, contains information about the IP address
+class IPData(BaseModel):
+    """Detailed data and risk assessment for an IP address.
 
-    is_vpn (bool): If the IP address is a VPN.
-    is_proxy (bool): If the IP address is a proxy.
-    is_tor (bool): If the IP address is a TOR node.
-    is_relay (bool): If the IP address is a relay.
-    asn (str): The ASN of the IP address.
+    device_count (int): Number of devices associated with the IP.
+    devices (List[Device]): List of devices associated with the IP.
+    behavior (List[str]): Observed behaviors (e.g., VPN_USER, ACTIVE_CRAWLER).
+    categories (List[str]): Categories the IP falls into (e.g., TOR_NODE, FREE_VPN).
+    enriched (Optional[List[EnrichedEntry]]): Enriched data from various providers.
+    ip_risk (int): Numeric risk score from 0 (none) to 100 (highest).
     """
 
-    is_vpn: bool
-    is_proxy: bool
-    is_tor: bool
-    is_relay: bool
-    asn: str
+    device_count: int
+    devices: List[Device]
+    behavior: List[str]
+    categories: List[str]
+    enriched: Optional[List[EnrichedEntry]] = None
+    ip_risk: int
 
 
-class Location(BaseModel):
-    """IP Location
+class IPLookupResponse(BaseModel):
+    """Response model for the IP lookup endpoint.
 
-    city (str): The city of the IP address.
-    region (str): The region of the IP address.
-    country (str): The country of the IP address.
-    region_code (str): The region code of the IP address.
-    country_code (str): The country code of the IP address.
-    latitude (float): The latitude of the IP address.
-    longitude (float): The longitude of the IP address.
+    ip (str): The IP address that was looked up.
+    network (Optional[Network]): Details about the network the IP belongs to.
+    location (Optional[Location]): Geographical location details.
+    ip_data (IPData): Detailed data and risk assessment.
     """
 
-    city: str
-    region: str
-    country: str
-    region_code: str
-    country_code: str
-    latitude: float
-    longitude: float
-
-
-class LookupResponse(BaseModel):
-    """Response model for the lookup endpoint.
-
-    token (str): The token of the visitor.
-    token_type (str): The type of token that was issued (metrics, sign, strict)
-    session (str): The persistent session of the visitor, will not change.
-    device (Optional[Device]): The device information of the visitor.
-    browser (Optional[Browser]): The browser information of the visitor.
-    ip (str): The IP address of the visitor.
-    ip_data (Optional[IpData]): The IP data of the visitor.
-    location (Optional[Location]): The location of the visitor.
-    page (Optional[str]): The page the visitor is on.
-    risk_score (int): The risk score of the visitor.
-    is_incognito (bool): If the visitor is in incognito mode.
-    is_bot (bool): If the visitor is a bot.
-    is_vm (bool): If the visitor is using a VM.
-    solved (Optional[bool]): If the visitor has solved the captcha. (if applicable, GetMetricsToken will be null)
-    consumed (bool): If the token has been consumed. AKA you used it before. Prevents abuse.
-    """
-
-    token: str
-    token_type: TokenType
-    session: str
-    device: Optional[Device] = None
-    browser: Optional[Browser] = None
     ip: str
-    ip_data: Optional[IpData] = None
+    network: Optional[Network] = None
     location: Optional[Location] = None
-    page: Optional[str] = None
-    risk_score: int
-    is_incognito: bool
-    is_bot: bool
-    is_vm: bool
-    solved: Optional[bool] = None
-    consumed: Optional[bool] = None
-
-    @property
-    def risk_level(self) -> RiskLevel:
-        if self.risk_score < 20:
-            return RiskLevel.LOW
-        elif self.risk_score < 50:
-            return RiskLevel.MEDIUM
-        else:
-            return RiskLevel.HIGH
+    ip_data: IPData
 
 
-class VisitResponse(BaseModel):
-    session: str
-    visits: List[LookupResponse]
-    has_next: bool
+class ProxyEvent(BaseModel):
+    """Event model for the Redis Pub/Sub firehose feed.
+    Channel name: proxy_feed
 
-
-class DeleteResponse(BaseResponse):
-    """Response model for the delete endpoint. Inherits from BaseResponse.
-
-    message (str): Message from the server.
+    ip (str): The IP address observed.
+    provider (str): The provider that observed the IP.
+    timestamp (str): Timestamp of the observation.
     """
+
+    ip: str
+    provider: str
+    timestamp: str

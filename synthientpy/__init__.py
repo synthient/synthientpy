@@ -2,18 +2,19 @@
 
 __author__ = """synthientpy"""
 __email__ = "contact@synthient.com"
-__version__ = "0.1.2"
+__version__ = "0.2.0"
 
 
 from .client import AsyncClient, Client
 from .exceptions import ErrorResponse, InternalServerError
 from .models import (
-    Browser,
     Device,
-    IpData,
+    EnrichedEntry,
+    FeedFormat,
+    IPData,
+    IPLookupResponse,
     Location,
-    LookupResponse,
-    RiskLevel,
-    TokenType,
+    Network,
+    ProxyEvent,
+    SortOrder,
 )
-from .utils import determine_action, verify_token

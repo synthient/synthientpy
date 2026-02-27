@@ -25,22 +25,21 @@ def async_test(coro):
     return wrapper
 
 
-def test_sync_lookup():
+def test_sync_lookup_ip():
     client = synthient.Client(
         api_key=os.getenv("SYNTHIENT_API_KEY"),
     )
-    response = client.lookup("b80fd0f58c61053c3d95f01c6dc94141")
-    assert response.token == "b80fd0f58c61053c3d95f01c6dc94141"
+    response = client.lookup_ip("8.8.8.8")
+    assert response.ip == "8.8.8.8"
 
 
 @async_test
-async def test_async_lookup():
+async def test_async_lookup_ip():
     client = synthient.AsyncClient(
         api_key=os.getenv("SYNTHIENT_API_KEY"),
     )
-    response = await client.lookup("b80fd0f58c61053c3d95f01c6dc94141")
-
-    assert response.token == "b80fd0f58c61053c3d95f01c6dc94141"
+    response = await client.lookup_ip("8.8.8.8")
+    assert response.ip == "8.8.8.8"
 
 
 def test_sync_404():
@@ -48,9 +47,9 @@ def test_sync_404():
         api_key=os.getenv("SYNTHIENT_API_KEY"),
     )
     try:
-        client.lookup("NONEXISTENT_TOKEN")
-    except synthient.ErrorResponse as e:
-        assert e.message == "Visitor not found"
+        client.lookup_ip("INVALID_IP")
+    except synthient.ErrorResponse:
+        pass
 
 
 @async_test
@@ -59,9 +58,9 @@ async def test_async_404():
         api_key=os.getenv("SYNTHIENT_API_KEY"),
     )
     try:
-        await client.lookup("NONEXISTENT_TOKEN")
-    except synthient.ErrorResponse as e:
-        assert e.message == "Visitor not found"
+        await client.lookup_ip("INVALID_IP")
+    except synthient.ErrorResponse:
+        pass
 
 
 def test_sync_401():
@@ -69,9 +68,9 @@ def test_sync_401():
         api_key="INVALID_API_KEY",
     )
     try:
-        client.lookup("b80fd0f58c61053c3d95f01c6dc94141")
+        client.lookup_ip("8.8.8.8")
     except synthient.ErrorResponse as e:
-        assert e.message == "Unauthorized"
+        assert e.message == "Invalid API key"
 
 
 @async_test
@@ -80,43 +79,23 @@ async def test_async_401():
         api_key="INVALID_API_KEY",
     )
     try:
-        await client.lookup("b80fd0f58c61053c3d95f01c6dc94141")
+        await client.lookup_ip("8.8.8.8")
     except synthient.ErrorResponse as e:
-        assert e.message == "Unauthorized"
+        assert e.message == "Invalid API key"
 
 
-def test_sync_visits():
+def test_sync_credits():
     client = synthient.Client(
         api_key=os.getenv("SYNTHIENT_API_KEY"),
     )
-    response = client.visits("6067acf071d3285097b65abc451c2192")
-    assert len(response.visits) == 7 and not response.has_next
+    response = client.credits()
+    assert isinstance(response, dict)
 
 
 @async_test
-async def test_async_visits():
+async def test_async_credits():
     client = synthient.AsyncClient(
         api_key=os.getenv("SYNTHIENT_API_KEY"),
     )
-    response = await client.visits("6067acf071d3285097b65abc451c2192")
-
-    assert len(response.visits) == 7 and not response.has_next
-
-
-def test_verify():
-    client = synthient.Client(
-        api_key=os.getenv("SYNTHIENT_API_KEY"),
-    )
-    response = client.lookup("b80fd0f58c61053c3d95f01c6dc94141")
-    response.consumed = False  # just for tests
-    assert synthient.verify_token(response, synthient.models.TokenType.SIGN) is True
-
-
-@async_test
-async def test_verify():
-    client = synthient.AsyncClient(
-        api_key=os.getenv("SYNTHIENT_API_KEY"),
-    )
-    response = await client.lookup("b80fd0f58c61053c3d95f01c6dc94141")
-    response.consumed = False  # just for tests
-    assert synthient.verify_token(response, synthient.models.TokenType.SIGN) is True
+    response = await client.credits()
+    assert isinstance(response, dict)

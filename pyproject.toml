@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "synthientpy"
-version = "0.1.5"
+version = "0.2.0"
 homepage = "https://github.com/synthient/synthientpy"
 description = "Synthient API bindings."
 authors = ["synthientpy <benjamin@synthient.com>"]

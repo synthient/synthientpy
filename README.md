@@ -28,21 +28,23 @@ class Client:
         default_timeout: int = DEFAULT_TIMEOUT,
         proxy: Optional[str] = None,
     ) -> None: ...
-     def lookup(self, token: str) -> LookupResponse: ...
-     def visits(self, session: str) -> VisitsResponse: ...
-     def delete(self, token: str) -> DeleteResponse: ...
+    def lookup_ip(self, ip_address: str) -> IPLookupResponse: ...
+    def credits(self) -> Dict[str, Any]: ...
+    def anonymizers(self, *, provider=None, type=None, last_observed=None, format=FeedFormat.CSV, country_code=None, full=False, order=SortOrder.DESC) -> bytes: ...
+    def blacklist(self, *, provider=None, type=None, format=FeedFormat.CSV, order=SortOrder.DESC) -> bytes: ...
 ```
 
 ### Synchronous Usage
 
 ```python
 import synthientpy as synthient
-client = synthient.Client(
-    api_key=os.getenv("SYNTHIENT_API_KEY"),
-)
-token = "..."
-visitor_info = client.lookup(token)
-print(visitor_info)
+
+client = synthient.Client(api_key="sk_...")
+
+ip_info = client.lookup_ip("8.8.8.8")
+print(ip_info.ip_data.ip_risk)
+print(ip_info.location)
+print(ip_info.network)
 ```
 
 ### Asynchronous Usage
@@ -52,43 +54,41 @@ import asyncio
 import synthientpy as synthient
 
 async def main():
-    client = synthient.AsyncClient(
-        api_key=os.getenv("SYNTHIENT_API_KEY"),
-    )
-    token = "..."
-    visitor_info = await client.lookup(token)
-    print(visitor_info)
+    client = synthient.AsyncClient(api_key="sk_...")
+
+    ip_info = await client.lookup_ip("8.8.8.8")
+    print(ip_info.ip_data.ip_risk)
 
 asyncio.run(main())
 ```
-### Helper Functions
 
-In addition to the client, there are helper functions that can be used to interact with the Synthient API.
+### Data Feeds
+
+Bulk data is available for clients who want to perform large-scale analysis or integrate Synthient data into their own systems. Feeds are returned as raw bytes in JSONL, CSV, or TEXT format.
 
 ```python
-def verify_token(lookup: LookupResponse, token_type: TokenType) -> bool: ...
+import synthientpy as synthient
 
-def determine_action(lookup: LookupResponse, token_type: TokenType) -> str: ...
-```
-Verify token checks if the token is valid and if the server should reject or accept it.
-Determine action checks if the token is valid and returns the action that should be taken based on the token type.
-```python
-class ActionType(str, Enum):
-    """Translates the risk level into an action to take.
-    ALLOW - Allow the visitor to continue.
-    REDIRECT - Redirect the visitor to a different page. Or have them perform another form of verification.
-    BLOCK - Block the visitor from accessing
-    """
+client = synthient.Client(api_key="sk_...")
 
-    ALLOW = 0
-    REDIRECT = 1
-    BLOCK = 2
+anonymizers = client.anonymizers(
+    provider="BIRDPROXIES",
+    type="RESIDENTIAL_PROXY",
+    last_observed="7D",
+    format=synthient.FeedFormat.CSV,
+    country_code="US",
+)
+
+blacklist = client.blacklist(
+    provider="NORDVPN",
+    type="COMMERCIAL_VPN",
+    format=synthient.FeedFormat.CSV,
+)
 ```
 
 ### Models
 
-Full documentation of the fields and their types can be found in the [Synthient API documentation](https://synthient.com/api). You can also find all the types in the `synthientpy.models` module.
-
+Full documentation of the fields and their types can be found in the [Synthient API documentation](https://docs.synthient.com). You can also find all the types in the `synthientpy.models` module.
 
 ### Issues
 
