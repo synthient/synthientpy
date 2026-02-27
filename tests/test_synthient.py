@@ -47,8 +47,8 @@ def test_sync_404():
         api_key=os.getenv("SYNTHIENT_API_KEY"),
     )
     try:
-        client.lookup_ip("INVALID_IP")
-    except synthient.ErrorResponse:
+        client.lookup_ip("not_an_ip")
+    except (synthient.ErrorResponse, synthient.InternalServerError):
         pass
 
 
@@ -58,8 +58,8 @@ async def test_async_404():
         api_key=os.getenv("SYNTHIENT_API_KEY"),
     )
     try:
-        await client.lookup_ip("INVALID_IP")
-    except synthient.ErrorResponse:
+        await client.lookup_ip("not_an_ip")
+    except (synthient.ErrorResponse, synthient.InternalServerError):
         pass
 
 

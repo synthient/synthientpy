@@ -1,7 +1,7 @@
 [tool]
 [tool.poetry]
 name = "synthientpy"
-version = "0.2.0"
+version = "0.3.0"
 homepage = "https://github.com/synthient/synthientpy"
 description = "Synthient API bindings."
 authors = ["synthientpy <benjamin@synthient.com>"]
@@ -13,10 +13,11 @@ classifiers=[
     'License :: OSI Approved :: Apache Software License',
     'Natural Language :: English',
     'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
+    'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: 3.13',
 ]
 packages = [
     { include = "synthientpy" },
@@ -24,10 +25,10 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8,<4.0"
-requests  = "2.32.3"
-aiohttp = "3.9.4"
-pydantic = "2.6.4"
+python = ">=3.9,<4.0"
+requests  = "2.32.5"
+aiohttp = "3.13.3"
+pydantic = "2.12.5"
 
 black  = { version = "^22.3.0", optional = true}
 isort  = { version = "5.10.1", optional = true}

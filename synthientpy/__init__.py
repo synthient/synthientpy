@@ -2,7 +2,7 @@
 
 __author__ = """synthientpy"""
 __email__ = "contact@synthient.com"
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 
 from .client import AsyncClient, Client
